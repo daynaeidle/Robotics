@@ -10,17 +10,17 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.port.SensorPort;
 import lejos.robotics.SampleProvider;
 
-public class VehicleTwoA {
+public class VehicleTwoB {
 
 	public static void main(String[] args) {
 		
-		final double LIGHT_THRESHOLD = 0.2;
+		final double LIGHT_THRESHOLD = 0.25;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
 		EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.D);
 		
-		EV3ColorSensor lightSensor1 = new EV3ColorSensor(SensorPort.S1);
-		EV3ColorSensor lightSensor2 = new EV3ColorSensor(SensorPort.S4);
+		EV3ColorSensor lightSensor1 = new EV3ColorSensor(SensorPort.S4);
+		EV3ColorSensor lightSensor2 = new EV3ColorSensor(SensorPort.S1);
 		
 		EV3 ev3brick = (EV3) BrickFinder.getLocal();
 		

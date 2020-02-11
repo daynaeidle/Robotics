@@ -10,17 +10,17 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.port.SensorPort;
 import lejos.robotics.SampleProvider;
 
-public class VehicleTwoA {
+public class VehicleThreeA {
 
 	public static void main(String[] args) {
 		
-		final double LIGHT_THRESHOLD = 0.2;
+		final double LIGHT_THRESHOLD = 0.25;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
 		EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.D);
 		
-		EV3ColorSensor lightSensor1 = new EV3ColorSensor(SensorPort.S1);
-		EV3ColorSensor lightSensor2 = new EV3ColorSensor(SensorPort.S4);
+		EV3ColorSensor lightSensor1 = new EV3ColorSensor(SensorPort.S4);
+		EV3ColorSensor lightSensor2 = new EV3ColorSensor(SensorPort.S1);
 		
 		EV3 ev3brick = (EV3) BrickFinder.getLocal();
 		
@@ -50,24 +50,46 @@ public class VehicleTwoA {
 			LCD.drawString(String.valueOf(sample2[0]), 1, 1);
 			
 			if (sample1[0] < LIGHT_THRESHOLD && sample2[0] < LIGHT_THRESHOLD) {
+				LEFT_MOTOR.setSpeed(100);
+				RIGHT_MOTOR.setSpeed(100);
 				LEFT_MOTOR.backward();
 				RIGHT_MOTOR.backward();
-			}else if (sample1[0] > LIGHT_THRESHOLD && sample2[0] > LIGHT_THRESHOLD) {
+			} else if (sample1[0] > LIGHT_THRESHOLD && sample2[0] > LIGHT_THRESHOLD) {
 				if (sample1[0] > sample2[0]) {
 					LEFT_MOTOR.backward();
 					RIGHT_MOTOR.stop();
+					LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+					RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+					LEFT_MOTOR.backward();
+					RIGHT_MOTOR.backward();
 				}else if (sample2[0] > sample1[0]) {
 					RIGHT_MOTOR.backward();
 					LEFT_MOTOR.stop();
+					RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+					LEFT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+					RIGHT_MOTOR.backward();
+					LEFT_MOTOR.backward();
 				}
 			}else if (sample1[0] > LIGHT_THRESHOLD) {
 				LEFT_MOTOR.backward();
 				RIGHT_MOTOR.stop();
+				LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+				RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+				LEFT_MOTOR.backward();
+				RIGHT_MOTOR.backward();
 			} else if (sample2[0] > LIGHT_THRESHOLD){
 				RIGHT_MOTOR.backward();
 				LEFT_MOTOR.stop();
+				RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+				LEFT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+				RIGHT_MOTOR.backward();
+				LEFT_MOTOR.backward();
 			}
 			
 		}
+	}
+	
+	public static int getSpeedFromLight(double lightVal) {
+		return 100 - (int)(lightVal * 100);
 	}
 }
