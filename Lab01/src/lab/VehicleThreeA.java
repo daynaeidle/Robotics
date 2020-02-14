@@ -3,7 +3,6 @@ package lab;
 import lejos.hardware.Keys;
 import lejos.hardware.BrickFinder;
 import lejos.hardware.ev3.EV3;
-import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
@@ -14,7 +13,9 @@ public class VehicleThreeA {
 
 	public static void main(String[] args) {
 		
-		final double LIGHT_THRESHOLD = 0.25;
+		final double LIGHT_THRESHOLD = 0.15;
+		final double TURNING_MAX_LIGHT = 0.5;
+		final double MAX_LIGHT_VALUE = 0.85;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
 		EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.D);
@@ -44,44 +45,92 @@ public class VehicleThreeA {
 		while (true) {
 			
 			sp1.fetchSample(sample1, 0);
-			LCD.drawString(String.valueOf(sample1[0]), 1, 0);
+			//LCD.drawString(String.valueOf(sample1[0]), 1, 0);
 			
 			sp2.fetchSample(sample2, 0);
-			LCD.drawString(String.valueOf(sample2[0]), 1, 1);
+			//LCD.drawString(String.valueOf(sample2[0]), 1, 1);
 			
+			//if neither motor detects a lot of light, set the speeds according to the light value
 			if (sample1[0] < LIGHT_THRESHOLD && sample2[0] < LIGHT_THRESHOLD) {
-				LEFT_MOTOR.setSpeed(100);
-				RIGHT_MOTOR.setSpeed(100);
-				LEFT_MOTOR.backward();
-				RIGHT_MOTOR.backward();
-			} else if (sample1[0] > LIGHT_THRESHOLD && sample2[0] > LIGHT_THRESHOLD) {
-				if (sample1[0] > sample2[0]) {
-					LEFT_MOTOR.backward();
-					RIGHT_MOTOR.stop();
-					LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
-					RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
-					LEFT_MOTOR.backward();
-					RIGHT_MOTOR.backward();
-				}else if (sample2[0] > sample1[0]) {
-					RIGHT_MOTOR.backward();
-					LEFT_MOTOR.stop();
-					RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
-					LEFT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
-					RIGHT_MOTOR.backward();
-					LEFT_MOTOR.backward();
-				}
-			}else if (sample1[0] > LIGHT_THRESHOLD) {
-				LEFT_MOTOR.backward();
-				RIGHT_MOTOR.stop();
 				LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
 				RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
 				LEFT_MOTOR.backward();
 				RIGHT_MOTOR.backward();
-			} else if (sample2[0] > LIGHT_THRESHOLD){
-				RIGHT_MOTOR.backward();
+			}else if (sample1[0] > MAX_LIGHT_VALUE || sample2[0] > MAX_LIGHT_VALUE) {
+				//if either sensor reads more than the max light value, stop both motors
 				LEFT_MOTOR.stop();
+				RIGHT_MOTOR.stop();
+			} else if (sample1[0] > LIGHT_THRESHOLD && sample2[0] > LIGHT_THRESHOLD) {
+				//if both detect a lot of light...
+			
+				if (sample1[0] > sample2[0]) {
+					
+					//if left detects more than right
+					System.out.println("Light detected on S1");
+					System.out.println("Light S1: " + sample1[0]);
+
+					//turn in that direction if it's still decently far away
+					if (sample1[0] < TURNING_MAX_LIGHT) {
+						LEFT_MOTOR.backward();
+						RIGHT_MOTOR.stop();	
+					}
+					
+					//lower the speed as it gets closer
+					LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+					RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+					System.out.println("Speed LEFT: " + getSpeedFromLight(sample1[0]));
+					LEFT_MOTOR.backward();
+					RIGHT_MOTOR.backward();
+				}else if (sample2[0] > sample1[0]) {
+					
+					//if right detects more than left
+					System.out.println("Light detected on S2");
+					System.out.println("Light S2: " + sample2[0]);
+					//turn in that direction if it's still decently far away
+					if (sample2[0] < TURNING_MAX_LIGHT) {
+						RIGHT_MOTOR.backward();
+						LEFT_MOTOR.stop();
+					}
+					
+					//lower the speed as it gets closer
+					RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+					LEFT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+					System.out.println("Speed RIGHT: " + getSpeedFromLight(sample2[0]));
+					RIGHT_MOTOR.backward();
+					LEFT_MOTOR.backward();
+				}
+			}else if (sample1[0] > LIGHT_THRESHOLD) {
+				//if left detects more than right
+				System.out.println("Light detected on S1");
+				System.out.println("Light S1: " + sample1[0]);
+				
+				//turn in that direction if it's still decently far away
+				if (sample1[0] < TURNING_MAX_LIGHT) {
+					LEFT_MOTOR.backward();
+					RIGHT_MOTOR.stop();	
+				}
+				//lower the speed as it gets closer
+				LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+				RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+				System.out.println("Speed LEFT: " + getSpeedFromLight(sample1[0]));
+				LEFT_MOTOR.backward();
+				RIGHT_MOTOR.backward();
+			} else if (sample2[0] > LIGHT_THRESHOLD){
+				
+				//if right detects more than left
+				System.out.println("Light detected on S2");
+				System.out.println("Light S2: " + sample2[0]);
+				
+				//turn in that direction if it's still decently far away
+				if (sample2[0] < TURNING_MAX_LIGHT) {
+					RIGHT_MOTOR.backward();
+					LEFT_MOTOR.stop();
+				}
+				
+				//lower the speed as it gets closer
 				RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
 				LEFT_MOTOR.setSpeed(getSpeedFromLight(sample2[0]));
+				System.out.println("Speed RIGHT: " + getSpeedFromLight(sample2[0]));
 				RIGHT_MOTOR.backward();
 				LEFT_MOTOR.backward();
 			}
