@@ -15,7 +15,7 @@ public class VehicleThreeA {
 		
 		final double LIGHT_THRESHOLD = 0.15;
 		final double TURNING_MAX_LIGHT = 0.5;
-		final double MAX_LIGHT_VALUE = 0.85;
+		final double MAX_LIGHT_VALUE = 0.80;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
 		EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.D);
@@ -52,11 +52,11 @@ public class VehicleThreeA {
 			
 			//if neither motor detects a lot of light, set the speeds according to the light value
 			if (sample1[0] < LIGHT_THRESHOLD && sample2[0] < LIGHT_THRESHOLD) {
-				LEFT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
-				RIGHT_MOTOR.setSpeed(getSpeedFromLight(sample1[0]));
+				LEFT_MOTOR.setSpeed(LEFT_MOTOR.getMaxSpeed() / 2);
+				RIGHT_MOTOR.setSpeed(RIGHT_MOTOR.getMaxSpeed() / 2);
 				LEFT_MOTOR.backward();
 				RIGHT_MOTOR.backward();
-			}else if (sample1[0] > MAX_LIGHT_VALUE || sample2[0] > MAX_LIGHT_VALUE) {
+			} else if (sample1[0] > MAX_LIGHT_VALUE || sample2[0] > MAX_LIGHT_VALUE) {
 				//if either sensor reads more than the max light value, stop both motors
 				LEFT_MOTOR.stop();
 				RIGHT_MOTOR.stop();
@@ -140,5 +140,14 @@ public class VehicleThreeA {
 	
 	public static int getSpeedFromLight(double lightVal) {
 		return 100 - (int)(lightVal * 100);
+	}
+	
+	public static void adjustSpeed(EV3LargeRegulatedMotor motor, double lightVal, double targetLightVal) {
+		int currentSpeed = motor.getSpeed();
+		if (lightVal > targetLightVal - 0.1) {
+			motor.setSpeed(--currentSpeed);
+		} else if (lightVal < targetLightVal + 0.1) {
+			motor.setSpeed(++currentSpeed);
+		}
 	}
 }
