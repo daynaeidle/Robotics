@@ -14,7 +14,10 @@ public class WallFollower {
 		
 		final int DEFAULT_SPEED = 360;
 		final float GOAL_DISTANCE = 25;
-		final int Kp = 10;
+		final float Kp = 15;
+		final float THRESHOLD = 50;
+		
+		float distance;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
 		EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.D);
@@ -40,9 +43,32 @@ public class WallFollower {
 			sp1.fetchSample(sample1, 0);
 			LCD.drawString(String.valueOf(sample1[0] * 100), 1, 0);
 			
-			pError = GOAL_DISTANCE - sample1[0];
+			if (sample1[0] * 100 >= THRESHOLD) {
+				distance = THRESHOLD;
+			}else {
+				distance = sample1[0] * 100;
+			}
 			
-			LEFT_MOTOR.setSpeed();
+			pError = GOAL_DISTANCE - distance;
+			
+			LCD.drawString("pError: " + String.valueOf(pError), 1, 2);
+			
+			
+			
+			if (pError < 0) {
+				
+				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + ((Kp * -1) * pError));
+				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
+				
+			}else if (pError > 0) {
+				
+				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED + (Kp * pError));
+				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
+				
+			}else if (pError == 0) {
+				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
+				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
+			}
 			
 			//if error is negative, increase speed of the right motor
 			//if error is positive, increase the speed of the left motor
