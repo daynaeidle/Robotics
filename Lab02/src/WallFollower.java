@@ -16,7 +16,7 @@ public class WallFollower {
 		final float GOAL_DISTANCE = 25;
 		final float Kp = 15;
 		final float Ki = 1;
-		final float Kd;
+		final float Kd = (float)0.5;
 		final float THRESHOLD = 50;
 		
 		float distance;
@@ -37,6 +37,7 @@ public class WallFollower {
 		float[] sample1 = new float[sampleSize1];
 		
 		float pError = 0;
+		float prevError = 0;
 		
 		LEFT_MOTOR.backward();
 		RIGHT_MOTOR.backward();
@@ -62,12 +63,12 @@ public class WallFollower {
 			
 			if (pError < 0) {
 				
-				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + (calculateSpeed(Kp, Ki, pError, integral)) * -1);
+				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + (calculateSpeed(Kp, Ki, Kd, pError, prevError, integral)) * -1);
 				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
 				
 			}else if (pError > 0) {
 				
-				RIGHT_MOTOR.setSpeed((DEFAULT_SPEED + (calculateSpeed(Kp, Ki, pError, integral))));
+				RIGHT_MOTOR.setSpeed((DEFAULT_SPEED + (calculateSpeed(Kp, Ki, Kd, pError, prevError, integral))));
 				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
 				
 			}else if (pError == 0) {
@@ -77,23 +78,37 @@ public class WallFollower {
 			
 			//if error is negative, increase speed of the right motor
 			//if error is positive, increase the speed of the left motor
+			prevError = pError;
 
 		}
 
 	}
 	
-	static float calculateSpeed(float kp, float ki, float error, float integral) {
+	static float calculateSpeed(float kp, float ki, float kd, float error, float prevError, float integral) {
 		
 		float p = kp * error;
 		
 		float i = ki * integral;
 		
-		return p + i;
+		float d = kd * updateDerivative(error, prevError);
+		
+		return p + i + d;
 		
 	}
 	
 	static float updateIntegral(float integral, float error) {
-		return integral + error;
+		if(error > 10) {
+			return integral + 10;
+		}else if ( error < -10){
+			return integral - 10;
+		}else {
+			return integral + error;
+		}
+		
+	}
+	
+	static float updateDerivative(float error, float prevError) {
+		return prevError - error;
 	}
 
 }
