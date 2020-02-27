@@ -15,9 +15,12 @@ public class WallFollower {
 		final int DEFAULT_SPEED = 360;
 		final float GOAL_DISTANCE = 25;
 		final float Kp = 15;
+		final float Ki = 1;
+		final float Kd;
 		final float THRESHOLD = 50;
 		
 		float distance;
+		float integral = 0;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
 		EV3LargeRegulatedMotor RIGHT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.D);
@@ -53,16 +56,18 @@ public class WallFollower {
 			
 			LCD.drawString("pError: " + String.valueOf(pError), 1, 2);
 			
+			integral = updateIntegral(integral, pError);
+			
 			
 			
 			if (pError < 0) {
 				
-				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + ((Kp * -1) * pError));
+				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + (calculateSpeed(Kp, Ki, pError, integral)) * -1);
 				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
 				
 			}else if (pError > 0) {
 				
-				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED + (Kp * pError));
+				RIGHT_MOTOR.setSpeed((DEFAULT_SPEED + (calculateSpeed(Kp, Ki, pError, integral))));
 				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
 				
 			}else if (pError == 0) {
@@ -75,6 +80,20 @@ public class WallFollower {
 
 		}
 
+	}
+	
+	static float calculateSpeed(float kp, float ki, float error, float integral) {
+		
+		float p = kp * error;
+		
+		float i = ki * integral;
+		
+		return p + i;
+		
+	}
+	
+	static float updateIntegral(float integral, float error) {
+		return integral + error;
 	}
 
 }
