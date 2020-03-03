@@ -14,10 +14,17 @@ public class WallFollower {
 		
 		final int DEFAULT_SPEED = 360;
 		final float GOAL_DISTANCE = 25;
-		final float Kp = 15;
-		final float Ki = 1;
-		final float Kd = (float)0.5;
+		final float Kp = 50;
+		final float Ki = 2;
+		final float Kd = (float)40;
 		final float THRESHOLD = 50;
+		
+		/**
+		 * Numbers we like
+		 * Kp = 50
+		 * Ki = 2
+		 * Kd = 30
+		 */
 		
 		float distance;
 		float integral = 0;
@@ -38,6 +45,8 @@ public class WallFollower {
 		
 		float pError = 0;
 		float prevError = 0;
+		
+		buttons.waitForAnyPress();
 		
 		LEFT_MOTOR.backward();
 		RIGHT_MOTOR.backward();
@@ -61,14 +70,15 @@ public class WallFollower {
 			
 			
 			
+			float desiredSpeed = calculateSpeed(Kp, Ki, Kd, pError, prevError, integral);
 			if (pError < 0) {
 				
-				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + (calculateSpeed(Kp, Ki, Kd, pError, prevError, integral)) * -1);
+				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed * -1);
 				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
 				
 			}else if (pError > 0) {
 				
-				RIGHT_MOTOR.setSpeed((DEFAULT_SPEED + (calculateSpeed(Kp, Ki, Kd, pError, prevError, integral))));
+				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed);
 				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
 				
 			}else if (pError == 0) {
@@ -97,12 +107,13 @@ public class WallFollower {
 	}
 	
 	static float updateIntegral(float integral, float error) {
-		if(error > 10) {
-			return integral + 10;
-		}else if ( error < -10){
-			return integral - 10;
+		float newIntegral = integral + error;
+		if(newIntegral > 20) {
+			return 20;
+		}else if ( newIntegral < -20){
+			return -20;
 		}else {
-			return integral + error;
+			return newIntegral;
 		}
 		
 	}
