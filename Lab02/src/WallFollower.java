@@ -16,8 +16,9 @@ public class WallFollower {
 		final float GOAL_DISTANCE = 25;
 		final float Kp = 50;
 		final float Ki = 2;
-		final float Kd = (float)40;
-		final float THRESHOLD = 50;
+		final float Kd = (float)30;
+		final float SIDE_THRESHOLD = 50;
+		final float FRONT_THRESHOLD = 25;
 		
 		/**
 		 * Numbers we like
@@ -26,7 +27,8 @@ public class WallFollower {
 		 * Kd = 30
 		 */
 		
-		float distance;
+		float sideDistance;
+		float frontDistance;
 		float integral = 0;
 		
 		EV3LargeRegulatedMotor LEFT_MOTOR = new EV3LargeRegulatedMotor(MotorPort.A);
@@ -35,13 +37,18 @@ public class WallFollower {
 		EV3 ev3brick = (EV3) BrickFinder.getLocal();
 		
 		NXTUltrasonicSensor sideSensor = new NXTUltrasonicSensor(SensorPort.S1);
+		NXTUltrasonicSensor frontSensor = new NXTUltrasonicSensor(SensorPort.S4);
 		
 		Keys buttons = ev3brick.getKeys();
 		
 		SampleProvider sp1 = sideSensor.getDistanceMode();
+		SampleProvider sp2 = frontSensor.getDistanceMode();
 		
 		int sampleSize1 = sp1.sampleSize();
 		float[] sample1 = new float[sampleSize1];
+		
+		int sampleSize2 = sp2.sampleSize();
+		float[] sample2 = new float[sampleSize2];
 		
 		float pError = 0;
 		float prevError = 0;
@@ -54,41 +61,64 @@ public class WallFollower {
 		while(true) {
 			
 			sp1.fetchSample(sample1, 0);
-			LCD.drawString(String.valueOf(sample1[0] * 100), 1, 0);
 			
-			if (sample1[0] * 100 >= THRESHOLD) {
-				distance = THRESHOLD;
+			
+			sp2.fetchSample(sample2, 0);
+			
+		
+			
+			if (sample1[0] * 100 >= SIDE_THRESHOLD) {
+				sideDistance = SIDE_THRESHOLD;
 			}else {
-				distance = sample1[0] * 100;
+				sideDistance = sample1[0] * 100;
 			}
 			
-			pError = GOAL_DISTANCE - distance;
-			
-			LCD.drawString("pError: " + String.valueOf(pError), 1, 2);
-			
-			integral = updateIntegral(integral, pError);
-			
-			
-			
-			float desiredSpeed = calculateSpeed(Kp, Ki, Kd, pError, prevError, integral);
-			if (pError < 0) {
-				
-				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed * -1);
-				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
-				
-			}else if (pError > 0) {
-				
-				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed);
-				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
-				
-			}else if (pError == 0) {
-				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
-				LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
+			if (sample2[0] * 100 >= SIDE_THRESHOLD) {
+				frontDistance = SIDE_THRESHOLD;
+			}else {
+				frontDistance = sample2[0] * 100;
 			}
 			
-			//if error is negative, increase speed of the right motor
-			//if error is positive, increase the speed of the left motor
-			prevError = pError;
+			LCD.drawString(String.valueOf(sideDistance), 0, 1);
+			LCD.drawString(String.valueOf(frontDistance), 0, 2);
+			
+			
+			if (frontDistance >= FRONT_THRESHOLD) {
+				LCD.drawString("FORWARD", 0, 4);
+				
+				pError = GOAL_DISTANCE - sideDistance;
+				
+				LCD.drawString("pError: " + String.valueOf(pError), 0, 3);
+				
+				integral = updateIntegral(integral, pError);
+				
+				
+				
+				float desiredSpeed = calculateSpeed(Kp, Ki, Kd, pError, prevError, integral);
+				if (pError < 0) {
+					
+					LEFT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed * -1);
+					RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
+					
+				}else if (pError > 0) {
+					
+					RIGHT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed);
+					LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
+					
+				}else if (pError == 0) {
+					RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
+					LEFT_MOTOR.setSpeed(DEFAULT_SPEED);
+				}
+			
+				prevError = pError;
+				
+			}else {
+				LEFT_MOTOR.setSpeed(1);
+				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED + 500);
+				LCD.drawString("TURNING", 0, 4);
+			}
+			
+			
 
 		}
 
