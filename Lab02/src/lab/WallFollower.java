@@ -15,8 +15,6 @@ public class WallFollower {
 	public static void main(String[] args) {
 
 		final int DEFAULT_SPEED = 360;
-		final int MIN_SPEED = 1;
-		final int MAX_SPEED = 1050;
 		final float GOAL_DISTANCE = 25;
 		final float Kp = 50;
 		final float KpFront = 20;
@@ -92,12 +90,15 @@ public class WallFollower {
 			if (frontDistance >= FRONT_THRESHOLD && sideDistance >= SIDE_THRESHOLD) {
 				frontError = GOAL_DISTANCE - frontDistance;
 				
+				//turn clockwise to find a wall
 				RIGHT_MOTOR.setSpeed(DEFAULT_SPEED);
 				LEFT_MOTOR.setSpeed(DEFAULT_SPEED + ((KpFront * frontError) * -1));
 				LCD.drawString("BACK", 0, 4);
 				
 				
 			} else if (frontDistance >= FRONT_THRESHOLD) {
+				
+				//straighten out on the wall
 				LCD.drawString("FORWARD", 0, 4);
 
 				pError = GOAL_DISTANCE - sideDistance;
@@ -106,7 +107,9 @@ public class WallFollower {
 
 				integral = updateIntegral(integral, pError);
 
+				//calculate new speed based on PID constants
 				float desiredSpeed = calculateSpeed(Kp, Ki, Kd, pError, prevError, integral);
+				
 				if (pError < 0) {
 
 					LEFT_MOTOR.setSpeed(DEFAULT_SPEED + desiredSpeed * -1);
@@ -125,6 +128,7 @@ public class WallFollower {
 				prevError = pError;
 
 			} else {
+				//turn away from the wall
 				frontError = GOAL_DISTANCE - frontDistance;
 				
 				if (frontError < 0) {
@@ -146,6 +150,16 @@ public class WallFollower {
 
 	}
 
+	/**
+	 * Calculate speed based on error and PID constants
+	 * @param kp
+	 * @param ki
+	 * @param kd
+	 * @param error
+	 * @param prevError
+	 * @param integral
+	 * @return float
+	 */
 	static float calculateSpeed(float kp, float ki, float kd, float error, float prevError, float integral) {
 
 		float p = kp * error;
@@ -158,6 +172,12 @@ public class WallFollower {
 
 	}
 
+	/**
+	 * Update the integral based on the current error
+	 * @param integral
+	 * @param error
+	 * @return float
+	 */
 	static float updateIntegral(float integral, float error) {
 		float newIntegral = integral + error;
 		if (newIntegral > 20) {
@@ -170,6 +190,12 @@ public class WallFollower {
 
 	}
 
+	/**
+	 * Update the derivative based on error
+	 * @param error
+	 * @param prevError
+	 * @return float
+	 */
 	static float updateDerivative(float error, float prevError) {
 		return prevError - error;
 	}
